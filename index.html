@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>我的学霸成长看板</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary-blue: #E3F2FD; /* 柔和蓝 */
+            --primary-yellow: #FFF9C4; /* 柔和黄 */
+            --primary-pink: #F8BBD0; /* 柔和粉 */
+            --primary-green: #C8E6C9; /* 柔和绿 */
+            --text-color: #37474F;
+            --border-radius: 12px;
+            --btn-color: #5C6BC0;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: #f5f5f7;
+            margin: 0;
+            padding: 20px 10px;
+            color: var(--text-color);
+        }
+
+        /* 整个看板容器，用于截图 */
+        #dashboard-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            max-width: 600px; /* 适配手机宽度 */
+            margin: 0 auto;
+            position: relative;
+            /* 模拟纸张纹理 */
+            background-image: linear-gradient(#f0f0f0 1px, transparent 1px), linear-gradient(90deg, #f0f0f0 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-color: #fff;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 3px dashed #ddd;
+            padding-bottom: 10px;
+        }
+
+        h1 {
+            font-size: 22px;
+            color: var(--text-color);
+            margin: 0;
+            font-weight: 800;
+        }
+
+        h2 {
+            font-size: 16px;
+            margin: 0 0 10px 0;
+            padding: 5px 10px;
+            border-radius: 6px;
+            display: inline-block;
+            color: #444;
+            font-weight: bold;
+            border: 2px solid #444;
+            background: #fff;
+            box-shadow: 3px 3px 0 #ddd;
+        }
+
+        /* 通用板块样式 */
+        .section-box {
+            background: rgba(255,255,255,0.9);
+            border: 2px solid #444;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        /* 四种颜色主题 */
+        .theme-blue { background-color: var(--primary-blue); }
+        .theme-yellow { background-color: var(--primary-yellow); }
+        .theme-green { background-color: var(--primary-green); }
+        .theme-pink { background-color: var(--primary-pink); }
+
+        /* 输入框行样式 */
+        .input-row {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        input {
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 14px;
+            width: 100%;
+            background: rgba(255,255,255,0.8);
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--btn-color);
+            background: #fff;
+            box-shadow: 0 0 5px rgba(92, 107, 192, 0.2);
+        }
+
+        /* 专门针对分数的输入框 */
+        .score-input {
+            width: 50px;
+            text-align: center;
+        }
+
+        /* 按钮样式 */
+        .action-btn {
+            background: #fff;
+            border: 1px solid #999;
+            color: #666;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 16px;
+            line-height: 22px;
+            text-align: center;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        
+        .add-btn-area {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .add-text-btn {
+            background: transparent;
+            border: 2px dashed #999;
+            color: #666;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* Checkbox 样式 */
+        .todo-check {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--btn-color);
+        }
+
+        /* 底部生成图片按钮区域 */
+        .footer-actions {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        #generate-btn {
+            background: var(--btn-color);
+            color: #fff;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(92, 107, 192, 0.3);
+            cursor: pointer;
+        }
+        
+        #generate-btn:active {
+            transform: scale(0.98);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="dashboard-container">
+        <header>
+            <h1>📅 我的成长看板</h1>
+            <p style="font-size:12px; color:#888; margin-top:5px;">Every day makes a difference</p>
+        </header>
+
+        <div class="section-box theme-yellow">
+            <h2>🎯 目标 (Target)</h2>
+            <div id="target-list">
+                </div>
+            <div class="add-btn-area">
+                <button class="add-text-btn" onclick="addItem('target')">+ 添加学科目标</button>
+            </div>
+        </div>
+
+        <div class="section-box theme-blue">
+            <h2>💣 攻克弱项 (Weak Points)</h2>
+            <div id="weakness-list">
+                </div>
+            <div class="add-btn-area">
+                <button class="add-text-btn" onclick="addItem('weakness')">+ 添加弱项</button>
+            </div>
+        </div>
+
+        <div class="section-box theme-green">
+            <h2>🚀 行动计划 (Action Plan)</h2>
+            <div id="plan-list">
+                </div>
+            <div class="add-btn-area">
+                <button class="add-text-btn" onclick="addItem('plan')">+ 添加计划</button>
+            </div>
+        </div>
+
+        <div class="section-box theme-pink">
+            <h2>📝 待完成任务 (To-Do)</h2>
+            <div id="todo-list">
+                </div>
+            <div class="add-btn-area">
+                <button class="add-text-btn" onclick="addItem('todo')">+ 添加任务</button>
+            </div>
+        </div>
+        
+        <div style="text-align:center; font-size:12px; color:#999; margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
+            Designed by Self-Discipline | Keep Moving Forward
+        </div>
+    </div>
+
+    <div class="footer-actions">
+        <button id="generate-btn" onclick="generateImage()">📸 生成美图并保存</button>
+        <p style="font-size:12px; color:#aaa; margin-top:10px;">数据会自动保存，刷新页面不丢失</p>
+    </div>
+
+    <script>
+        // --- 默认数据结构 ---
+        const defaultData = {
+            targets: [
+                { subject: "", target: "", current: "" },
+                { subject: "", target: "", current: "" }
+            ],
+            weaknesses: [
+                { text: "" },
+                { text: "" }
+            ],
+            plans: [
+                { text: "" },
+                { text: "" }
+            ],
+            todos: [
+                { text: "", done: false },
+                { text: "", done: false }
+            ]
+        };
+
+        // --- 全局数据 ---
+        let appData = JSON.parse(localStorage.getItem('studyBoardData')) || JSON.parse(JSON.stringify(defaultData));
+
+        // --- 初始化 ---
+        window.onload = function() {
+            renderAll();
+        };
+
+        // --- 保存数据 ---
+        function saveData() {
+            localStorage.setItem('studyBoardData', JSON.stringify(appData));
+        }
+
+        // --- 渲染所有板块 ---
+        function renderAll() {
+            renderTargets();
+            renderWeaknesses();
+            renderPlans();
+            renderTodos();
+        }
+
+        // 1. 渲染目标
+        function renderTargets() {
+            const container = document.getElementById('target-list');
+            container.innerHTML = '';
+            appData.targets.forEach((item, index) => {
+                container.innerHTML += `
+                    <div class="input-row">
+                        <input type="text" placeholder="例如: 数学" value="${item.subject}" oninput="updateData('targets', ${index}, 'subject', this.value)">
+                        <input type="text" class="score-input" placeholder="目标" value="${item.target}" oninput="updateData('targets', ${index}, 'target', this.value)">
+                        <span style="color:#999">/</span>
+                        <input type="text" class="score-input" placeholder="当前" value="${item.current}" oninput="updateData('targets', ${index}, 'current', this.value)">
+                        <button class="action-btn" onclick="deleteItem('targets', ${index})">×</button>
+                    </div>
+                `;
+            });
+        }
+
+        // 2. 渲染弱项
+        function renderWeaknesses() {
+            const container = document.getElementById('weakness-list');
+            container.innerHTML = '';
+            appData.weaknesses.forEach((item, index) => {
+                container.innerHTML += `
+                    <div class="input-row">
+                        <span style="font-weight:bold; color:#666; width:20px;">${index + 1}.</span>
+                        <input type="text" placeholder="例如: 英语完形填空" value="${item.text}" oninput="updateData('weaknesses', ${index}, 'text', this.value)">
+                        <button class="action-btn" onclick="deleteItem('weaknesses', ${index})">×</button>
+                    </div>
+                `;
+            });
+        }
+
+        // 3. 渲染计划
+        function renderPlans() {
+            const container = document.getElementById('plan-list');
+            container.innerHTML = '';
+            appData.plans.forEach((item, index) => {
+                container.innerHTML += `
+                    <div class="input-row">
+                        <input type="text" placeholder="例如: 每天刷一道压轴题" value="${item.text}" oninput="updateData('plans', ${index}, 'text', this.value)">
+                        <button class="action-btn" onclick="deleteItem('plans', ${index})">×</button>
+                    </div>
+                `;
+            });
+        }
+
+        // 4. 渲染任务
+        function renderTodos() {
+            const container = document.getElementById('todo-list');
+            container.innerHTML = '';
+            appData.todos.forEach((item, index) => {
+                container.innerHTML += `
+                    <div class="input-row">
+                        <input type="checkbox" class="todo-check" ${item.done ? 'checked' : ''} onchange="updateData('todos', ${index}, 'done', this.checked)">
+                        <input type="text" placeholder="例如: 完成数学习题卷" value="${item.text}" 
+                               style="text-decoration: ${item.done ? 'line-through' : 'none'}; color: ${item.done ? '#aaa' : '#333'}" 
+                               oninput="updateData('todos', ${index}, 'text', this.value)">
+                        <button class="action-btn" onclick="deleteItem('todos', ${index})">×</button>
+                    </div>
+                `;
+            });
+        }
+
+        // --- 核心逻辑操作 ---
+
+        // 更新数据
+        function updateData(category, index, key, value) {
+            appData[category][index][key] = value;
+            saveData();
+            // 如果是 checkbox 或影响样式的操作，需要重新渲染
+            if (category === 'todos' && key === 'done') {
+                renderTodos(); 
+            }
+        }
+
+        // 添加项目
+        function addItem(type) {
+            if (type === 'target') {
+                appData.targets.push({ subject: "", target: "", current: "" });
+            } else if (type === 'weakness') {
+                appData.weaknesses.push({ text: "" });
+            } else if (type === 'plan') {
+                appData.plans.push({ text: "" });
+            } else if (type === 'todo') {
+                appData.todos.push({ text: "", done: false });
+            }
+            saveData();
+            renderAll();
+        }
+
+        // 删除项目
+        function deleteItem(category, index) {
+            appData[category].splice(index, 1);
+            saveData();
+            renderAll();
+        }
+
+        // --- 生成图片功能 ---
+        function generateImage() {
+            const element = document.getElementById("dashboard-container");
+            const btn = document.getElementById("generate-btn");
+            
+            btn.innerText = "生成中...";
+            
+            // 使用 html2canvas 库进行截图
+            html2canvas(element, {
+                scale: 2, // 提高清晰度
+                backgroundColor: "#fff", // 确保背景也是白的
+                useCORS: true 
+            }).then(canvas => {
+                // 创建下载链接
+                const link = document.createElement("a");
+                link.download = "我的成长看板_" + new Date().toLocaleDateString() + ".png";
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+                
+                btn.innerText = "📸 生成美图并保存";
+                alert("图片已生成！请查看你的相册或下载文件夹。");
+            }).catch(err => {
+                console.error(err);
+                alert("生成失败，请重试");
+                btn.innerText = "📸 生成美图并保存";
+            });
+        }
+    </script>
+</body>
+</html>
